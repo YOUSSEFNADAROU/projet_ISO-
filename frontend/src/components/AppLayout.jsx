@@ -1,17 +1,46 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import './AppLayout.css';
 
 const AppLayout = ({ children, pageTitle, pageSubtitle }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
+    return window.innerWidth > 768;
+  });
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
+    return window.innerWidth > 768;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const nextIsDesktop = window.innerWidth > 768;
+      setIsDesktop(nextIsDesktop);
+      setSidebarOpen(nextIsDesktop);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="app-layout">
       {/* Sidebar */}
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        persistent={isDesktop}
+        onClose={() => setSidebarOpen(false)}
+      />
       
       {/* Main Content */}
       <div className="layout-main">
@@ -20,7 +49,6 @@ const AppLayout = ({ children, pageTitle, pageSubtitle }) => {
           pageTitle={pageTitle} 
           pageSubtitle={pageSubtitle}
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-          menuOpen={sidebarOpen}
         />
         
         {/* Page Content */}

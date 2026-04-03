@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Home, FileText, CheckSquare, BarChart3, FileCheck, X } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ open, onClose }) => {
+const Sidebar = ({ open, persistent, onClose }) => {
   const location = useLocation();
 
   const menuItems = [
@@ -20,7 +20,7 @@ const Sidebar = ({ open, onClose }) => {
   return (
     <>
       {/* Mobile Overlay */}
-      {open && (
+      {open && !persistent && (
         <motion.div 
           className="sidebar-overlay"
           initial={{ opacity: 0 }}
@@ -48,8 +48,8 @@ const Sidebar = ({ open, onClose }) => {
               <p>Simulator</p>
             </div>
           </div>
-          {open && (
-            <button className="sidebar-close" onClick={onClose}>
+          {open && !persistent && (
+            <button className="sidebar-close" onClick={onClose} aria-label="Fermer le menu">
               <X size={20} />
             </button>
           )}
@@ -65,7 +65,7 @@ const Sidebar = ({ open, onClose }) => {
                 key={item.path}
                 to={item.path}
                 className={`sidebar-link ${active ? 'active' : ''}`}
-                onClick={() => open && onClose()}
+                onClick={() => !persistent && onClose()}
               >
                 <Icon size={20} className="sidebar-icon" />
                 <span className="sidebar-label">{item.label}</span>

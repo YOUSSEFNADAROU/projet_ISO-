@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, CheckSquare, BarChart3, FileCheck, ArrowRight } from 'lucide-react';
+import { CheckSquare, BarChart3, FileCheck, ArrowRight } from 'lucide-react';
 import api from '../services/api';
 import AppLayout from '../components/AppLayout';
 import PageHeader from '../components/PageHeader';
@@ -17,7 +17,6 @@ const Home = () => {
   }, []);
 
   const quickLinks = [
-    { path: '/scenario', label: 'Scénario', icon: FileText, color: 'blue' },
     { path: '/controls', label: 'Contrôles', icon: CheckSquare, color: 'cyan' },
     { path: '/dashboard', label: 'Tableau de Bord', icon: BarChart3, color: 'orange' },
     { path: '/report', label: 'Rapport', icon: FileCheck, color: 'green' },

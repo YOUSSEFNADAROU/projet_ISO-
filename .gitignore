@@ -1,0 +1,17 @@
+# Dependances
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Fichiers generes
+.vite/
+dist/
+build/
+
+# Fichiers d'environnement
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/

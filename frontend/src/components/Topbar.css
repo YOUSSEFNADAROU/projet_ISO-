@@ -54,6 +54,47 @@
   gap: var(--spacing-lg);
 }
 
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.topbar-user strong {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.1;
+}
+
+.topbar-user span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.topbar-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #0f172a;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.topbar-logout:hover {
+  transform: translateY(-1px);
+  background: #111c33;
+}
+
 .topbar-date {
   font-size: 0.9rem;
   color: var(--color-text-secondary);
@@ -78,5 +119,13 @@
 
   .topbar-date {
     display: none;
+  }
+
+  .topbar-user {
+    display: none;
+  }
+
+  .topbar-logout {
+    padding: 10px 12px;
   }
 }

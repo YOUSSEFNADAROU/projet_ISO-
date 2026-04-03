@@ -1,0 +1,270 @@
+.company-selector-page {
+  min-height: 100vh;
+  background: #f2f4f9;
+  padding: 1.1rem;
+}
+
+.company-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dce3ee;
+  border-radius: 16px;
+  padding: 0.8rem 1rem;
+}
+
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #eaf0ff;
+  color: #445ecf;
+}
+
+.brand-wrap h1 {
+  margin: 0;
+  color: #5860d0;
+}
+
+.brand-wrap span {
+  background: #ece9ff;
+  color: #6142c7;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+}
+
+.logout-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 0.85rem;
+  cursor: pointer;
+  background: #f3f5fb;
+  color: #2a3856;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.stats-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #dce3ee;
+  border-radius: 16px;
+  padding: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #53617d;
+}
+
+.stat-card strong {
+  color: #16233c;
+  font-size: 1.45rem;
+}
+
+.stat-card p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03rem;
+  font-weight: 700;
+}
+
+.search-wrap {
+  margin-top: 0.95rem;
+  background: #fff;
+  border: 1px solid #dce3ee;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.8rem;
+  color: #75829a;
+}
+
+.search-wrap input {
+  border: none;
+  width: 100%;
+  font-size: 1.1rem;
+  color: #243251;
+  outline: none;
+}
+
+.companies-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.8rem;
+}
+
+.company-card {
+  background: #fff;
+  border: 1px solid #dce3ee;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.company-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.95rem;
+  background: linear-gradient(135deg, #4d53df, #6f36da);
+  color: #fff;
+}
+
+.company-card-top h3 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.company-card-top span {
+  background: rgba(255, 255, 255, 0.18);
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.company-lines {
+  padding: 0.8rem 0.95rem 0.4rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.company-lines p {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #455674;
+}
+
+.company-summary {
+  padding: 0 0.95rem;
+  color: #54637f;
+  min-height: 45px;
+}
+
+.company-actions {
+  border-top: 1px solid #e3e8f3;
+  padding: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.company-actions button {
+  border: none;
+  border-radius: 11px;
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.company-actions .secondary {
+  background: #edf1f8;
+  color: #2f3d56;
+}
+
+.company-actions .primary {
+  color: #fff;
+  background: linear-gradient(135deg, #4d53df, #6f36da);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.empty-state {
+  margin-top: 1rem;
+  border: 1px dashed #ccd6e7;
+  border-radius: 16px;
+  padding: 1.2rem;
+  text-align: center;
+  color: #596b88;
+  background: #fff;
+}
+
+.company-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 12, 30, 0.44);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  z-index: 30;
+}
+
+.company-modal {
+  width: min(700px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid #dde3ef;
+  padding: 1.2rem;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  border: none;
+  border-radius: 8px;
+  background: #edf2fa;
+  cursor: pointer;
+}
+
+.company-modal p {
+  color: #314360;
+}
+
+.modal-actions {
+  border-top: 1px solid #e1e7f2;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.modal-actions button {
+  border: none;
+  border-radius: 11px;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.modal-actions .secondary {
+  background: #edf1f8;
+  color: #2f3d56;
+}
+
+.modal-actions .primary {
+  color: #fff;
+  background: linear-gradient(135deg, #4d53df, #6f36da);
+}
+
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -9,8 +9,7 @@ const Navbar = () => {
       <div className="navbar-container">
         <div className="navbar-brand">Simulateur Audit ISO 2700x</div>
         <ul className="navbar-nav">
-          <li><Link to="/" className={location.pathname === '/' ? 'active' : ''}>Accueil</Link></li>
-          <li><Link to="/scenario" className={location.pathname === '/scenario' ? 'active' : ''}>Scénario</Link></li>
+          <li><Link to="/home" className={location.pathname === '/home' ? 'active' : ''}>Accueil</Link></li>
           <li><Link to="/controls" className={location.pathname === '/controls' ? 'active' : ''}>Contrôles</Link></li>
           <li><Link to="/dashboard" className={location.pathname === '/dashboard' ? 'active' : ''}>Dashboard</Link></li>
           <li><Link to="/report" className={location.pathname === '/report' ? 'active' : ''}>Rapport</Link></li>

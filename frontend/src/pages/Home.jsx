@@ -15,7 +15,8 @@ const Home = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    api.get('/dashboard').then(response => setDashboard(response.data));
+    const companyId = localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId') || 'default';
+    api.get('/dashboard', { params: { companyId } }).then(response => setDashboard(response.data));
   }, []);
 
   const quickLinks = [
@@ -27,6 +28,28 @@ const Home = () => {
   return (
     <AppLayout pageTitle="Accueil" pageSubtitle="Bienvenue dans ISO Audit Simulator">
       <div className="home-container">
+        {/* Progress Section */}
+        {dashboard && (
+          <Card className="home-progress">
+            <div className="progress-header">
+              <div>
+                <h2>Progression d'audit</h2>
+                <p>Suivi en temps reel de l'avancement des controles.</p>
+              </div>
+              <div className="progress-kpi">
+                <strong>{dashboard.progress}%</strong>
+                <span>{dashboard.evaluated}/{dashboard.totalControls} controles</span>
+              </div>
+            </div>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${dashboard.progress}%` }}
+              />
+            </div>
+          </Card>
+        )}
+
         {/* Welcome Section */}
         <Card className="home-welcome">
           <div className="welcome-content">
@@ -62,33 +85,15 @@ const Home = () => {
                   transition={{ duration: 0.3, delay: i * 0.1 }}
                 >
                   <Link to={link.path} className={`quick-link quick-link-${link.color}`}>
-                    <Icon size={32} />
+                    <Icon size={28} />
                     <span>{link.label}</span>
-                    <ArrowRight size={20} />
+                    <ArrowRight size={18} />
                   </Link>
                 </motion.div>
               );
             })}
           </div>
         </div>
-
-        {/* Progress Section */}
-        {dashboard && (
-          <div className="home-section">
-            <h3>Progression d'évaluation</h3>
-            <Card>
-              <div className="progress-section">
-                <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ width: `${dashboard.progress}%` }}
-                  />
-                </div>
-                <p className="progress-text">{dashboard.progress}% des contrôles évalués ({dashboard.evaluated}/{dashboard.totalControls})</p>
-              </div>
-            </Card>
-          </div>
-        )}
 
         {/* Info Section */}
         <div className="home-section">

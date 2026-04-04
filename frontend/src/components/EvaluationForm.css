@@ -212,6 +212,31 @@
   background: rgba(37, 99, 235, 0.01);
 }
 
+/* Text Input */
+.form-input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 14px;
+  color: var(--color-navy);
+  background: white;
+  border: 1.5px solid #d5dce0;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.form-input:hover {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  background: rgba(37, 99, 235, 0.01);
+}
+
 /* Status Badge */
 .status-badge {
   display: inline-flex;
@@ -267,6 +292,79 @@
   margin-bottom: var(--spacing-md);
   padding-bottom: var(--spacing-md);
   border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+/* Remediation Scoring */
+.remediation-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.remediation-slider {
+  flex: 1;
+  height: 8px;
+  border-radius: 5px;
+  background: linear-gradient(to right, #ef4444, #f97316, #eab308, #84cc16, #22c55e);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.remediation-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--color-navy);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.remediation-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--color-navy);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.remediation-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 110px;
+  gap: 4px;
+}
+
+.remediation-score-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.remediation-score-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.remediation-score-label.low {
+  color: var(--color-red);
+}
+
+.remediation-score-label.medium {
+  color: var(--color-orange);
+}
+
+.remediation-score-label.high {
+  color: var(--color-green);
 }
 
 .risk-section-title svg {

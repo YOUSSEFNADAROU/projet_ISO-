@@ -1,11 +1,15 @@
  const mongoose = require('mongoose');
 
 const evaluationSchema = new mongoose.Schema({
+  companyId: {
+    type: String,
+    required: true,
+    index: true,
+  },
   controlId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Control', 
     required: true,
-    unique: true  // Garantit 1 contrôle = 1 évaluation (pas de doublons)
   },
   status: { type: String, enum: ['Conforme', 'Partiellement conforme', 'Non conforme'], required: true },
   justification: { type: String, required: true },
@@ -17,5 +21,7 @@ const evaluationSchema = new mongoose.Schema({
   remediationComments: { type: String },  // Notes on remediation efforts
   remediationDeadline: { type: Date },  // Target date for remediation
 }, { timestamps: true });
+
+evaluationSchema.index({ companyId: 1, controlId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Evaluation', evaluationSchema);

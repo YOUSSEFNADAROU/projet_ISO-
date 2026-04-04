@@ -44,6 +44,7 @@ const CompanyRegistration = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
+  const [copyFeedback, setCopyFeedback] = useState('');
 
   const companies = useMemo(() => loadCompanies(), [confirmation]);
 
@@ -136,11 +137,36 @@ const CompanyRegistration = () => {
 
   const copyAccessCode = async () => {
     if (!confirmation?.accessCode) return;
+    const text = confirmation.accessCode;
+    let copied = false;
+
     try {
-      await navigator.clipboard.writeText(confirmation.accessCode);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
     } catch (clipboardError) {
-      console.error('Impossible de copier le code.', clipboardError);
+      copied = false;
     }
+
+    if (!copied) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch (fallbackError) {
+        copied = false;
+      }
+    }
+
+    setCopyFeedback(copied ? 'Code copie avec succes.' : 'Copie impossible sur ce navigateur.');
+    window.setTimeout(() => setCopyFeedback(''), 2000);
   };
 
   if (confirmation) {
@@ -163,6 +189,7 @@ const CompanyRegistration = () => {
             <span>Code d acces</span>
             <strong>{confirmation.accessCode}</strong>
             <button type="button" onClick={copyAccessCode}><Copy size={16} /> Copier</button>
+            {copyFeedback && <small className="copy-feedback">{copyFeedback}</small>}
           </div>
 
           <div className="confirm-actions">

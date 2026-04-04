@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Building2, ShieldCheck } from 'lucide-react';
 import './CompanyDashboard.css';
@@ -8,6 +8,12 @@ const CompanyDashboard = () => {
 
   const companyName = localStorage.getItem('companyName') || 'Entreprise';
   const companyId = localStorage.getItem('companyId');
+
+  useEffect(() => {
+    if (!companyId) return;
+    localStorage.setItem('selectedCompanyId', companyId);
+    localStorage.setItem('selectedCompanyName', companyName);
+  }, [companyId, companyName]);
 
   const startOrResume = () => {
     if (companyId) {

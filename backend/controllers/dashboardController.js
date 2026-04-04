@@ -3,10 +3,14 @@ const Evaluation = require('../models/Evaluation');
 
 exports.getDashboard = async (req, res) => {
   try {
+    const companyId = req.query.companyId || 'default';
     const totalControls = await Control.countDocuments();
     
     // Récupérer les évaluations uniques par controlId (prendre la plus récente)
     const uniqueEvaluations = await Evaluation.aggregate([
+      {
+        $match: { companyId }
+      },
       {
         $sort: { updatedAt: -1 }
       },
@@ -14,6 +18,7 @@ exports.getDashboard = async (req, res) => {
         $group: {
           _id: '$controlId',
           controlId: { $first: '$controlId' },
+          companyId: { $first: '$companyId' },
           status: { $first: '$status' }
         }
       },

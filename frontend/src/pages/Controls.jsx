@@ -16,11 +16,15 @@ const Controls = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
+    const companyId = localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId') || 'default';
     api.get('/controls').then(response => setControls(response.data));
-    api.get('/evaluations').then(response => {
+    api.get('/evaluations', { params: { companyId } }).then(response => {
       const evalMap = {};
       response.data.forEach(evaluation => {
-        evalMap[evaluation.controlId] = evaluation;
+        const controlKey = evaluation.controlId?._id || evaluation.controlId;
+        if (controlKey) {
+          evalMap[controlKey] = evaluation;
+        }
       });
       setEvaluations(evalMap);
     });

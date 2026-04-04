@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, FileText, AlertCircle, CheckCircle2, XCircle, TrendingUp, Shield } from 'lucide-react';
 import api from '../services/api';
@@ -7,7 +7,7 @@ import Card from '../components/Card';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import ChatPanel from '../components/ChatPanel';
-import { calculateAuditScore, generateExecutiveSummary, calculateRiskStats } from '../utils/auditCalculations';
+import { calculateAuditScore, calculateRiskStats } from '../utils/auditCalculations';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf';
@@ -27,10 +27,33 @@ const Report = () => {
   const [actionPlanLoading, setActionPlanLoading] = useState(false);
 
   useEffect(() => {
-    api.get('/report')
+    const companyId = localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId') || 'default';
+    api.get('/report', { params: { companyId } })
       .then(response => setReport(response.data))
       .catch(err => console.error('Erreur chargement rapport:', err));
   }, []);
+
+  const companyScenario = useMemo(() => {
+    if (!report?.scenario) return null;
+    try {
+      const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+      const selectedId = localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId');
+      const company = companies.find((item) => item.id === selectedId);
+      if (!company) return report.scenario;
+
+      return {
+        ...report.scenario,
+        name: company.name || report.scenario.name,
+        sector: company.sector || report.scenario.sector,
+        size: company.size || report.scenario.size,
+        auditObjective: company.auditObjective || report.scenario.auditObjective,
+        contactEmail: company.contactEmail || report.scenario.contactEmail,
+        contactPhone: company.contactPhone || report.scenario.contactPhone,
+      };
+    } catch (storageError) {
+      return report.scenario;
+    }
+  }, [report]);
 
   const analyzeCurrentReport = () => {
     setPdfAnalysisError('');
@@ -61,13 +84,15 @@ const Report = () => {
   const analyzeWithAi = async () => {
     if (!report) return;
 
+    const scenario = companyScenario || report.scenario;
+
     setAiAnalysis(null);
     setPdfAnalysisError('');
     setAiLoading(true);
 
     try {
       const response = await api.post('/report/analyze', {
-        scenario: report.scenario,
+        scenario,
         evaluations: report.evaluations,
       });
 
@@ -86,13 +111,15 @@ const Report = () => {
       return;
     }
 
+    const scenario = companyScenario || report.scenario;
+
     setActionPlan(null);
     setPdfAnalysisError('');
     setActionPlanLoading(true);
 
     try {
       const response = await api.post('/report/action-plan', {
-        scenario: report.scenario,
+        scenario,
         evaluations: report.evaluations,
       });
 
@@ -168,93 +195,212 @@ const Report = () => {
     reader.readAsArrayBuffer(file);
   };
 
-  const generatePDF = () => {
-    try {
-      setGenerateError('');
+  const generatePdfWithExtras = async () => {
+    setGenerateError('');
 
-      if (!report || !report.scenario || !report.evaluations) {
-        setGenerateError('Données manquantes pour générer le PDF');
-        return;
+    if (!report || !report.scenario || !report.evaluations) {
+      setGenerateError('Données manquantes pour générer le PDF');
+      return;
+    }
+
+    try {
+      const scenario = companyScenario || report.scenario;
+      const scenarioPayload = { scenario, evaluations: report.evaluations };
+
+      const auditTeam = [
+        'Youssef Nadarou',
+        'Imane Id Moullay',
+        'Hanane Essahely',
+        'Khaoula Maraghir',
+        'Hajar Laqlib'
+      ];
+
+      let nextAiAnalysis = aiAnalysis;
+      let nextActionPlan = actionPlan;
+
+      if (!nextAiAnalysis) {
+        const aiResponse = await api.post('/report/analyze', scenarioPayload);
+        nextAiAnalysis = aiResponse.data;
+        setAiAnalysis(aiResponse.data);
+      }
+
+      if (!nextActionPlan) {
+        const planResponse = await api.post('/report/action-plan', scenarioPayload);
+        nextActionPlan = planResponse.data;
+        setActionPlan(planResponse.data);
       }
 
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      let yPosition = 15;
 
-      doc.setFontSize(24);
+      const writeParagraph = (text, startY) => {
+        const lines = doc.splitTextToSize(text, pageWidth - 40);
+        doc.text(lines, 20, startY);
+        return startY + lines.length * 5 + 4;
+      };
+
+      const addSectionTitle = (title, startY) => {
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text(title, 20, startY);
+        return startY + 8;
+      };
+
+      const addFooter = (pageNumber) => {
+        doc.setFontSize(10);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Page ${pageNumber}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+      };
+
+      // Cover page
+      doc.setFontSize(26);
       doc.setFont(undefined, 'bold');
       doc.setTextColor(15, 23, 42);
-      doc.text('Rapport d\'Audit ISO 2700x', 20, yPosition);
-      yPosition += 12;
+      doc.text('Rapport d\'Audit ISO 2700x', pageWidth / 2, 60, { align: 'center' });
 
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont(undefined, 'normal');
-      doc.setTextColor(100, 100, 100);
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Entreprise: ${scenario?.name || 'N/A'}`, pageWidth / 2, 80, { align: 'center' });
       const auditDate = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
-      doc.text(`Généré le ${auditDate}`, 20, yPosition);
+      doc.text(`Date: ${auditDate}`, pageWidth / 2, 90, { align: 'center' });
+      doc.text('Cabinet d\'audit: LearnAudit', pageWidth / 2, 100, { align: 'center' });
+
+      doc.setFontSize(11);
+      doc.setTextColor(90, 90, 90);
+      doc.text('Equipe d\'audit:', pageWidth / 2, 115, { align: 'center' });
+      auditTeam.forEach((auditor, index) => {
+        doc.text(auditor, pageWidth / 2, 123 + index * 6, { align: 'center' });
+      });
+
+      addFooter(doc.internal.getNumberOfPages());
+      doc.addPage();
+
+      // Distribution et clause de non-responsabilite
+      let yPosition = 20;
+      yPosition = addSectionTitle('Distribution', yPosition);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+      yPosition = writeParagraph(
+        'Le contenu du present rapport ne doit pas etre divulgue a un tiers sans l\'accord du client de LearnAudit.',
+        yPosition
+      );
+      yPosition += 6;
+      yPosition = addSectionTitle('Clause de non-responsabilite', yPosition);
+      yPosition = writeParagraph(
+        'Le present rapport a ete prepare par LearnAudit pour donner suite a la demande d\'evaluation d\'un client. L\'objectif est de verifier la conformite aux exigences applicables et autres criteres specifies. Le contenu du present rapport ne s\'applique qu\'aux elements evidents au moment de l\'audit et faisant partie de son perimetre. LearnAudit ne garantit ni ne commente la pertinence du contenu du rapport ou du certificat a des fins ou utilisations particulieres. LearnAudit n\'accepte aucune responsabilite quant aux consequences ou mesures prises par des tiers a la suite des informations contenues dans ce rapport. Cet audit est base sur un processus d\'echantillonnage de l\'information disponible et ne permet pas de garantir que toutes les non-conformites eventuelles ont ete detectees.',
+        yPosition
+      );
+      addFooter(doc.internal.getNumberOfPages());
+      doc.addPage();
+
+      // Plan (table des matieres)
+      yPosition = 20;
+      yPosition = addSectionTitle('Plan', yPosition);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+      const planLines = [
+        '1. Introduction',
+        '2. Informations sur l\'audit',
+        '3. Preparation et methodologie d\'audit',
+        '4. Resultats et evaluations',
+        '5. Plan d\'action',
+        '6. Analyse IA',
+        '7. Conclusion'
+      ];
+      planLines.forEach((line) => {
+        doc.text(line, 20, yPosition);
+        yPosition += 7;
+      });
+      addFooter(doc.internal.getNumberOfPages());
+      doc.addPage();
+
+      // Introduction
+      yPosition = 20;
+      yPosition = addSectionTitle('Introduction', yPosition);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+      yPosition = writeParagraph(
+        `J\'ai audite le systeme de management de la securite de l\'information (SMSI) de l\'organisation ${scenario?.name || 'l\'entreprise'} dans l\'objectif d\'evaluer sa conformite aux exigences de l\'ISO/IEC 27001:2013 et sa capacite a fonctionner de maniere efficace. L\'audit a ete realise par une equipe professionnelle selon une approche par les processus, avec un accent sur les risques et les objectifs critiques.`,
+        yPosition
+      );
+      yPosition = writeParagraph(
+        'Conformement aux normes ISO 19011 et ISO/IEC 17021, notre equipe a planifie et execute l\'audit afin d\'obtenir une assurance raisonnable que le SMSI est conforme et que les exigences applicables sont respectees. L\'audit repose sur un echantillonnage des informations disponibles et des non-conformites ou opportunites d\'amelioration peuvent subsister dans des domaines non examines.',
+        yPosition
+      );
+      addFooter(doc.internal.getNumberOfPages());
+      doc.addPage();
+
+      // Informations sur l'audit
+      yPosition = 20;
+      yPosition = addSectionTitle('Informations sur l\'audit', yPosition);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+      doc.text(`Organisation: ${scenario?.name || 'N/A'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Secteur: ${scenario?.sector || 'N/A'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Taille: ${scenario?.size || 'N/A'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Email du contact: ${scenario?.contactEmail || 'N/A'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Telephone du contact: ${scenario?.contactPhone || 'N/A'}`, 20, yPosition);
       yPosition += 8;
+      yPosition = writeParagraph(`Objectif de l\'audit: ${scenario?.auditObjective || 'N/A'}`, yPosition);
+      yPosition += 4;
+      yPosition = writeParagraph('Norme d\'audit: ISO/IEC 27001:2013', yPosition);
+      yPosition = writeParagraph(`Date de l\'audit: ${auditDate}`, yPosition);
+      yPosition += 4;
+      yPosition = writeParagraph(`Auditeur principal: ${auditTeam[0]}`, yPosition);
+      yPosition = writeParagraph(`Autres membres de l\'equipe: ${auditTeam.slice(1).join(', ')}`, yPosition);
+      addFooter(doc.internal.getNumberOfPages());
+      doc.addPage();
 
-      doc.setDrawColor(200, 200, 200);
-      doc.line(20, yPosition, pageWidth - 20, yPosition);
-      yPosition += 10;
+      // Preparation et methodologie
+      yPosition = 20;
+      yPosition = addSectionTitle('Preparation et methodologie d\'audit', yPosition);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+      yPosition = writeParagraph(
+        'Les objectifs de l\'audit consistent a confirmer que l\'organisation a defini le perimetre du SMSI, qu\'il est conforme aux exigences de la norme, aux obligations legales et qu\'il est capable d\'atteindre les objectifs de securite de l\'information.',
+        yPosition
+      );
+      yPosition = writeParagraph(
+        'Les methodes utilisees comprennent des entrevues, l\'observation des activites, l\'examen de la documentation, des tests techniques limites et une analyse d\'echantillons. L\'echantillonnage permet de tirer des conclusions sur l\'ensemble en examinant une partie representative.',
+        yPosition
+      );
+      yPosition = writeParagraph(
+        'Le plan d\'audit a ete valide avec l\'organisation avant la reunion d\'ouverture. Les non-conformites identifiees, le cas echeant, doivent etre traitees via le processus d\'actions correctives de l\'organisation.',
+        yPosition
+      );
+      addFooter(doc.internal.getNumberOfPages());
+      doc.addPage();
 
+      // Resultats et evaluations
+      yPosition = 20;
+      yPosition = addSectionTitle('Résultats et Évaluations', yPosition);
       const conforme = report.evaluations.filter(e => e.status === 'Conforme').length;
       const partiellement = report.evaluations.filter(e => e.status === 'Partiellement conforme').length;
       const nonConforme = report.evaluations.filter(e => e.status === 'Non conforme').length;
       const score = calculateAuditScore(report.evaluations);
 
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(15, 23, 42);
-      doc.text('Résumé Exécutif', 20, yPosition);
-      yPosition += 10;
-
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
       doc.setTextColor(50, 50, 50);
-      const summaryText = `L'audit de sécurité de l'information a porté sur un total de ${report.evaluations.length} contrôles. Le taux de conformité global s'élève à ${score}%.`;
-      const summaryWrapped = doc.splitTextToSize(summaryText, pageWidth - 40);
-      doc.text(summaryWrapped, 20, yPosition);
-      yPosition += summaryWrapped.length * 5 + 8;
-
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'bold');
-      doc.text('Score Global: ' + score + '%', 20, yPosition);
-      yPosition += 7;
-      doc.setFont(undefined, 'normal');
-      doc.text(`Conformes: ${conforme} (${Math.round((conforme / report.evaluations.length) * 100)}%)`, 20, yPosition);
+      doc.text(`Score global: ${score}%`, 20, yPosition);
       yPosition += 6;
-      doc.text(`Partiellement conformes: ${partiellement} (${Math.round((partiellement / report.evaluations.length) * 100)}%)`, 20, yPosition);
+      doc.text(`Conformes: ${conforme}`, 20, yPosition);
       yPosition += 6;
-      doc.text(`Non conformes: ${nonConforme} (${Math.round((nonConforme / report.evaluations.length) * 100)}%)`, 20, yPosition);
-      yPosition += 10;
-
-      const scenario = report.scenario;
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(15, 23, 42);
-      doc.text('Informations de l\'Entreprise', 20, yPosition);
-      yPosition += 10;
-
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(50, 50, 50);
-      doc.text('Nom: ', 20, yPosition);
+      doc.text(`Partiellement conformes: ${partiellement}`, 20, yPosition);
       yPosition += 6;
-      doc.text('Secteur: ', 20, yPosition);
-      yPosition += 6;
-      doc.text('Taille: ', 20, yPosition);
-      yPosition += 6;
-      const objective = scenario.auditObjective || 'N/A';
-      const objectiveWrapped = doc.splitTextToSize('Objectif: ', 170);
-      doc.text(objectiveWrapped, 20, yPosition);
-      yPosition += objectiveWrapped.length * 6 + 10;
-
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(15, 23, 42);
-      doc.text('Détail des Contrôles', 20, yPosition);
+      doc.text(`Non conformes: ${nonConforme}`, 20, yPosition);
       yPosition += 8;
 
       const tableData = report.evaluations.map(e => [
@@ -271,9 +417,7 @@ const Report = () => {
         startY: yPosition,
         margin: 10,
         didDrawPage: (data) => {
-          const footer = 'Page ' + data.pageNumber;
-          doc.setFontSize(10);
-          doc.text(footer, pageWidth / 2, pageHeight - 10, { align: 'center' });
+          addFooter(data.pageNumber);
         },
         styles: { fontSize: 9, cellPadding: 4, textColor: [50, 50, 50] },
         headerStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
@@ -281,8 +425,82 @@ const Report = () => {
         columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 45 }, 2: { cellWidth: 30 }, 3: { cellWidth: 55 }, 4: { cellWidth: 20 } }
       });
 
+      // Plan d'action
+      doc.addPage();
+      yPosition = 20;
+      yPosition = addSectionTitle('Plan d\'Action', yPosition);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+
+      if (nextActionPlan?.actionPlan?.length) {
+        nextActionPlan.actionPlan.forEach((item, index) => {
+          yPosition = writeParagraph(
+            `${index + 1}. ${item.controlCode || 'N/A'} - ${item.controlTitle || ''} (${item.priority || 'Moyenne'})`,
+            yPosition
+          );
+          if (item.steps?.length) {
+            yPosition = writeParagraph(`Étapes: ${item.steps.join(' | ')}`, yPosition);
+          }
+          if (item.resources?.length) {
+            yPosition = writeParagraph(`Ressources: ${item.resources.join(' | ')}`, yPosition);
+          }
+          if (item.timeline || item.owner || item.expectedOutcome) {
+            yPosition = writeParagraph(
+              `Calendrier: ${item.timeline || 'N/A'} | Responsable: ${item.owner || 'N/A'} | Résultat attendu: ${item.expectedOutcome || 'N/A'}`,
+              yPosition
+            );
+          }
+          yPosition += 4;
+
+          if (yPosition > pageHeight - 30) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        });
+      } else {
+        yPosition = writeParagraph('Aucun plan d\'action disponible.', yPosition);
+      }
+      addFooter(doc.internal.getNumberOfPages());
+
+      // Analyse IA
+      doc.addPage();
+      yPosition = 20;
+      yPosition = addSectionTitle('Analyse IA', yPosition);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+      const aiText = nextAiAnalysis?.executiveSummary || nextAiAnalysis?.analysis || nextAiAnalysis?.answer || 'Analyse IA non disponible.';
+      yPosition = writeParagraph(aiText, yPosition);
+      if (nextAiAnalysis?.recommendations?.length) {
+        yPosition = writeParagraph(`Recommandations: ${nextAiAnalysis.recommendations.join(' | ')}`, yPosition);
+      }
+      addFooter(doc.internal.getNumberOfPages());
+
+      // Conclusion
+      doc.addPage();
+      yPosition = 20;
+      yPosition = addSectionTitle('Conclusion', yPosition);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(50, 50, 50);
+      yPosition = writeParagraph(
+        `L'audit met en évidence les points forts et les axes d'amélioration prioritaires. Un suivi régulier est recommandé afin de maintenir un niveau de conformité élevé.`,
+        yPosition
+      );
+      yPosition += 8;
+
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, yPosition, pageWidth - 20, yPosition);
+      doc.setFontSize(11);
+      doc.setTextColor(50, 50, 50);
+      doc.text('Cabinet d\'audit: LearnAudit', 20, yPosition + 8);
+      doc.text('Signature:', 20, yPosition + 16);
+
+      addFooter(doc.internal.getNumberOfPages());
+
       const timestamp = new Date().toISOString().slice(0, 10);
-      doc.save(`apport-audit-iso27001-${timestamp}.pdf`);
+      doc.save(`rapport-audit-iso27001-${timestamp}.pdf`);
     } catch (error) {
       console.error('Erreur génération PDF:', error);
       setGenerateError('Erreur lors de la génération du PDF: ' + error.message);
@@ -299,19 +517,19 @@ const Report = () => {
     );
   }
 
+  const scenario = companyScenario || report.scenario || {};
   const conforme = report.evaluations.filter(e => e.status === 'Conforme').length;
   const partiellement = report.evaluations.filter(e => e.status === 'Partiellement conforme').length;
   const nonConforme = report.evaluations.filter(e => e.status === 'Non conforme').length;
   const conformityRate = Math.round((conforme / report.evaluations.length) * 100);
   const score = calculateAuditScore(report.evaluations);
-  const summary = generateExecutiveSummary(report.evaluations, report.scenario);
 
   return (
     <AppLayout pageTitle="Rapport Final d'Audit" pageSubtitle="Analyse de conformité ISO 2700x">
       <div className="report-container">
         <motion.div className="report-header" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
           <div className="button-group-1">
-            <button onClick={generatePDF} className="btn-download" disabled={!report}>
+            <button onClick={generatePdfWithExtras} className="btn-download" disabled={!report}>
               <Download size={18} />
               Télécharger le Rapport
             </button>
@@ -437,24 +655,6 @@ const Report = () => {
           </Card>
         )}
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }}>
-          <Card className="executive-summary-card">
-            <div className="executive-header">
-              <Shield size={24} />
-              <h2>Résumé Exécutif</h2>
-            </div>
-            <div className="executive-content">
-              <p>L'audit couvre {report.evaluations.length} contrôles.</p>
-              <div className="exec-metrics">
-                <div className="metric"><span className="metric-label">Score Global</span><span className="metric-value primary">{summary.score}%</span></div>
-                <div className="metric"><span className="metric-label">Conformes</span><span className="metric-value green">{summary.conforme}</span></div>
-                <div className="metric"><span className="metric-label">Partiels</span><span className="metric-value orange">{summary.partiel}</span></div>
-                <div className="metric"><span className="metric-label">Non conformes</span><span className="metric-value red">{summary.non}</span></div>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-
         <div className="report-stats-grid">
           <StatCard title="Taux de Conformité" value={`${conformityRate}%`} icon={TrendingUp} variant="blue" />
           <StatCard title="Conformes" value={conforme} icon={CheckCircle2} variant="green" />
@@ -465,10 +665,12 @@ const Report = () => {
         <Card>
           <h2>Informations de l'Entreprise</h2>
           <div className="company-info-grid">
-            <div><p className="info-label">Nom</p><p className="info-value">{report.scenario.name}</p></div>
-            <div><p className="info-label">Secteur</p><p className="info-value">{report.scenario.sector}</p></div>
-            <div><p className="info-label">Taille</p><p className="info-value">{report.scenario.size}</p></div>
-            <div><p className="info-label">Objectif</p><p className="info-value">{report.scenario.auditObjective}</p></div>
+            <div><p className="info-label">Nom</p><p className="info-value">{scenario.name || 'N/A'}</p></div>
+            <div><p className="info-label">Secteur</p><p className="info-value">{scenario.sector || 'N/A'}</p></div>
+            <div><p className="info-label">Taille</p><p className="info-value">{scenario.size || 'N/A'}</p></div>
+            <div><p className="info-label">Objectif</p><p className="info-value">{scenario.auditObjective || 'N/A'}</p></div>
+            <div><p className="info-label">Email</p><p className="info-value">{scenario.contactEmail || 'N/A'}</p></div>
+            <div><p className="info-label">Téléphone</p><p className="info-value">{scenario.contactPhone || 'N/A'}</p></div>
           </div>
         </Card>
 

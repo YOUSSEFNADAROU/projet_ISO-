@@ -3,15 +3,15 @@
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: linear-gradient(145deg, #f8fbff, #ecf1ff);
+  background: var(--color-bg-primary);
 }
 
 .company-dashboard-card {
   width: min(760px, 100%);
-  border-radius: 28px;
-  background: #fff;
-  border: 1px solid #dfe5f2;
-  box-shadow: 0 24px 45px rgba(41, 57, 99, 0.15);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
   padding: clamp(1.2rem, 2.6vw, 2rem);
 }
 
@@ -19,8 +19,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  background: #eaf0ff;
-  color: #315ecf;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--color-blue);
   border-radius: 999px;
   padding: 0.5rem 1rem;
   font-weight: 700;
@@ -28,12 +28,12 @@
 
 .company-dashboard-card h1 {
   margin: 0.9rem 0 0.7rem;
-  color: #19243a;
+  color: var(--color-text-primary);
 }
 
 .company-dashboard-card p {
   margin: 0;
-  color: #55647e;
+  color: var(--color-text-secondary);
 }
 
 .company-dashboard-actions {
@@ -53,10 +53,10 @@
   border-radius: 14px;
   font-size: 1rem;
   color: #fff;
-  background: linear-gradient(135deg, #627ef9, #7447b7);
+  background: linear-gradient(135deg, var(--color-blue), var(--color-cyan));
 }
 
 .company-dashboard-actions button.secondary {
-  background: #eef2ff;
-  color: #2f436d;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }

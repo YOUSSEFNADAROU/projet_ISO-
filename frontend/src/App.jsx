@@ -3,6 +3,7 @@ import LoginChoice from './pages/auth/LoginChoice';
 import CompanyRegistration from './pages/company/CompanyRegistration';
 import CompanyDashboard from './pages/company/CompanyDashboard';
 import AuditorLogin from './pages/auditor/AuditorLogin';
+import CompanySelector from './pages/auditor/CompanySelector';
 import Home from './pages/Home';
 import Controls from './pages/Controls';
 import ControlDetail from './pages/ControlDetail';
@@ -18,14 +19,21 @@ function App() {
         <Routes>
           <Route path="/" element={<LoginChoice />} />
           <Route path="/company/register" element={<CompanyRegistration />} />
-          <Route path="/company/dashboard" element={<CompanyDashboard />} />
+          <Route path="/company/dashboard" element={<Navigate to="/home" replace />} />
           <Route path="/auditor/login" element={<AuditorLogin />} />
-          <Route path="/auditor/companies" element={<Navigate to="/home" replace />} />
+          <Route
+            path="/auditor/companies"
+            element={
+              <ProtectedRoute allowedRoles={["auditor"]}>
+                <CompanySelector />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route
             path="/home"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireCompanySelection>
                 <Home />
               </ProtectedRoute>
             }
@@ -33,7 +41,7 @@ function App() {
           <Route
             path="/controls"
             element={
-              <ProtectedRoute allowedRoles={["auditor"]}>
+              <ProtectedRoute allowedRoles={["auditor"]} requireCompanySelection>
                 <Controls />
               </ProtectedRoute>
             }
@@ -41,7 +49,7 @@ function App() {
           <Route
             path="/controls/:id"
             element={
-              <ProtectedRoute allowedRoles={["auditor"]}>
+              <ProtectedRoute allowedRoles={["auditor"]} requireCompanySelection>
                 <ControlDetail />
               </ProtectedRoute>
             }
@@ -49,7 +57,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireCompanySelection>
                 <Dashboard />
               </ProtectedRoute>
             }
@@ -57,7 +65,7 @@ function App() {
           <Route
             path="/report"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireCompanySelection>
                 <Report />
               </ProtectedRoute>
             }

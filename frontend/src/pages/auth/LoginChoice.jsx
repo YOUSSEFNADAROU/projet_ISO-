@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Building2,
   CheckCircle2,
+  Copy,
   Eye,
   EyeOff,
   KeyRound,
@@ -63,6 +64,7 @@ const LoginChoice = ({ initialRole = null }) => {
   const [auditorEmail, setAuditorEmail] = useState(DEMO_AUDITOR.email);
   const [auditorPassword, setAuditorPassword] = useState(DEMO_AUDITOR.password);
   const [error, setError] = useState('');
+  const [copyNote, setCopyNote] = useState('');
 
   const companies = useMemo(() => getRegisteredCompanies(), []);
 
@@ -77,6 +79,8 @@ const LoginChoice = ({ initialRole = null }) => {
     });
     localStorage.setItem('companyId', company.id);
     localStorage.setItem('companyName', company.name);
+    localStorage.setItem('selectedCompanyId', company.id);
+    localStorage.setItem('selectedCompanyName', company.name);
     localStorage.setItem('userRole', 'company');
     localStorage.removeItem('auditorId');
     navigate('/home');
@@ -93,7 +97,46 @@ const LoginChoice = ({ initialRole = null }) => {
     localStorage.setItem('userRole', 'auditor');
     localStorage.removeItem('companyId');
     localStorage.removeItem('companyName');
-    navigate('/home');
+    localStorage.removeItem('selectedCompanyId');
+    localStorage.removeItem('selectedCompanyName');
+    navigate('/auditor/companies');
+  };
+
+  const copyAccessCode = async () => {
+    const text = (companyCode || '').trim();
+    if (!text) {
+      setCopyNote('Veuillez saisir le code d acces d abord.');
+      return;
+    }
+
+    let copied = false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
+    } catch (clipboardError) {
+      copied = false;
+    }
+
+    if (!copied) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch (fallbackError) {
+        copied = false;
+      }
+    }
+
+    setCopyNote(copied ? 'Code copie.' : 'Copie impossible sur ce navigateur.');
+    window.setTimeout(() => setCopyNote(''), 2000);
   };
 
   const handleCompanySubmit = async (event) => {
@@ -222,6 +265,7 @@ const LoginChoice = ({ initialRole = null }) => {
                 onClick={() => {
                   setCompanyMode('email');
                   resetError();
+                  setCopyNote('');
                 }}
               >
                 <Mail size={18} /> Email / Mot de passe
@@ -232,6 +276,7 @@ const LoginChoice = ({ initialRole = null }) => {
                 onClick={() => {
                   setCompanyMode('code');
                   resetError();
+                  setCopyNote('');
                 }}
               >
                 <KeyRound size={18} /> Code d acces
@@ -273,7 +318,13 @@ const LoginChoice = ({ initialRole = null }) => {
                   onChange={(event) => setCompanyCode(event.target.value.toUpperCase())}
                   required
                 />
-                <p className="field-help">Entrez le code genere lors de votre inscription.</p>
+                <div className="code-copy-row">
+                  <p className="field-help">Entrez le code genere lors de votre inscription.</p>
+                  <button type="button" className="copy-btn" onClick={copyAccessCode}>
+                    <Copy size={16} /> Copier le code
+                  </button>
+                </div>
+                {copyNote && <p className="copy-note">{copyNote}</p>}
               </>
             )}
 

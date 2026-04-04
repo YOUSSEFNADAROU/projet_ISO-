@@ -14,6 +14,28 @@
   color: white;
 }
 
+.control-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.control-back {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-back:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
 .control-detail-header h1 {
   margin: 0 0 var(--spacing-sm) 0;
   font-size: 28px;
@@ -67,6 +89,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+}
+
+.evidence-note {
+  margin: 0 0 var(--spacing-md) 0;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 .evidence-item {

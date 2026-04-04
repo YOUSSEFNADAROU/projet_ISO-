@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, BookOpen, CheckSquare, Award, Calendar } from 'lucide-react';
+import { FileText, BookOpen, CheckSquare } from 'lucide-react';
 import api from '../services/api';
 import AppLayout from '../components/AppLayout';
 import Card from '../components/Card';
@@ -12,48 +12,26 @@ import './ControlDetail.css';
 
 const ControlDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [control, setControl] = useState(null);
-  const [evidence, setEvidence] = useState([]);
   const [evaluation, setEvaluation] = useState(null);
-  const [remediationScore, setRemediationScore] = useState(0);
-  const [remediationComments, setRemediationComments] = useState('');
-  const [remediationDeadline, setRemediationDeadline] = useState('');
-  const [savingRemediation, setSavingRemediation] = useState(false);
 
   const loadEvaluations = () => {
-    api.get('/evaluations').then(response => {
+    const companyId = localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId') || 'default';
+    api.get('/evaluations', { params: { companyId } }).then(response => {
       const evalForControl = response.data.find(e => e.controlId._id === id);
       setEvaluation(evalForControl);
-      if (evalForControl) {
-        setRemediationScore(evalForControl.remediationScore || 0);
-        setRemediationComments(evalForControl.remediationComments || '');
-        setRemediationDeadline(evalForControl.remediationDeadline || '');
-      }
     });
-  };
-
-  const saveRemediation = async () => {
-    setSavingRemediation(true);
-    try {
-      await api.put(`/evaluations/${evaluation._id}`, {
-        remediationScore,
-        remediationComments,
-        remediationDeadline
-      });
-      loadEvaluations();
-      alert('Scoring de remédiation sauvegardé!');
-    } catch (error) {
-      alert('Erreur lors de la sauvegarde: ' + error.message);
-    } finally {
-      setSavingRemediation(false);
-    }
   };
 
   useEffect(() => {
     api.get(`/controls/${id}`).then(response => setControl(response.data));
-    api.get(`/controls/${id}/evidence`).then(response => setEvidence(response.data));
     loadEvaluations();
   }, [id]);
+
+  const handleSaveSuccess = () => {
+    loadEvaluations();
+  };
 
   if (!control) return <AppLayout pageTitle="Contrôle"><div className="card">Chargement...</div></AppLayout>;
 
@@ -71,7 +49,12 @@ const ControlDetail = () => {
             <h1>{control.title}</h1>
             <p className="control-detail-code">Code : {control.code}</p>
           </div>
-          {evaluation && <StatusBadge status={evaluation.status} />}
+          <div className="control-detail-actions">
+            <button type="button" className="control-back" onClick={() => navigate('/controls')}>
+              Retour aux contrôles
+            </button>
+            {evaluation && <StatusBadge status={evaluation.status} />}
+          </div>
         </motion.div>
 
         {/* Main Info */}
@@ -101,30 +84,6 @@ const ControlDetail = () => {
           </Card>
         </div>
 
-        {/* Evidence Section */}
-        <Card>
-          <h2>Preuves et Éléments de Conformité</h2>
-          {evidence.length > 0 ? (
-            <div className="evidence-list">
-              {evidence.map((ev, index) => (
-                <motion.div
-                  key={ev._id}
-                  className="evidence-item"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  <div className="evidence-type">{ev.type}</div>
-                  <p className="evidence-content">{ev.content}</p>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="empty-evidence">
-              <p>Aucune preuve disponible pour ce contrôle.</p>
-            </div>
-          )}
-        </Card>
 
         {/* Current Evaluation */}
         {evaluation && (
@@ -163,71 +122,11 @@ const ControlDetail = () => {
           initialSeverity={evaluation?.severity || ''}
           initialProbability={evaluation?.probability || ''}
           initialRecommendation={evaluation?.recommendation || ''}
-          onSaveSuccess={loadEvaluations}
+          initialRemediationScore={evaluation?.remediationScore ?? 0}
+          initialRemediationComments={evaluation?.remediationComments || ''}
+          initialRemediationDeadline={evaluation?.remediationDeadline || ''}
+          onSaveSuccess={handleSaveSuccess}
         />
-
-        {/* Remediation Scoring Section */}
-        {evaluation && evaluation.status !== 'Conforme' && (
-          <Card>
-            <h2>
-              <Award size={24} style={{ display: 'inline-block', marginRight: '10px', verticalAlign: 'middle', color: '#f59e0b' }} />
-              Scoring de Remédiation
-            </h2>
-            <div className="remediation-form">
-              <div className="remediation-field">
-                <label>Score de Remédiation (%)</label>
-                <div className="remediation-slider-container">
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    value={remediationScore}
-                    onChange={(e) => setRemediationScore(Number(e.target.value))}
-                    className="remediation-slider"
-                  />
-                  <div className="remediation-score-display">
-                    <span className="score-value">{remediationScore}%</span>
-                    <span className={`score-label ${remediationScore < 30 ? 'low' : remediationScore < 70 ? 'medium' : 'high'}`}>
-                      {remediationScore < 30 ? 'Faible' : remediationScore < 70 ? 'En cours' : 'Avancé'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="remediation-field">
-                <label>Commentaires de Remédiation</label>
-                <textarea
-                  value={remediationComments}
-                  onChange={(e) => setRemediationComments(e.target.value)}
-                  placeholder="Décrivez les actions de remédiation entreprises..."
-                  rows="4"
-                  className="remediation-textarea"
-                />
-              </div>
-
-              <div className="remediation-field">
-                <label>
-                  <Calendar size={18} style={{ display: 'inline-block', marginRight: '8px', verticalAlign: 'middle' }} />
-                  Date Limite de Remédiation
-                </label>
-                <input
-                  type="date"
-                  value={remediationDeadline}
-                  onChange={(e) => setRemediationDeadline(e.target.value)}
-                  className="remediation-date"
-                />
-              </div>
-
-              <button 
-                onClick={saveRemediation}
-                disabled={savingRemediation}
-                className="btn-save-remediation"
-              >
-                {savingRemediation ? 'Sauvegarde...' : '💾 Sauvegarder la Remédiation'}
-              </button>
-            </div>
-          </Card>
-        )}
       </div>
     </AppLayout>
   );

@@ -2,8 +2,12 @@ const Evaluation = require('../models/Evaluation');
 
 exports.getEvaluations = async (req, res) => {
   try {
+    const companyId = req.query.companyId || 'default';
     // Récupérer les évaluations uniques (dernière par controlId)
     const evaluations = await Evaluation.aggregate([
+      {
+        $match: { companyId }
+      },
       {
         $sort: { updatedAt: -1 }
       },
@@ -11,12 +15,17 @@ exports.getEvaluations = async (req, res) => {
         $group: {
           _id: '$controlId',
           controlId: { $first: '$controlId' },
+          companyId: { $first: '$companyId' },
+          evaluationId: { $first: '$_id' },
           status: { $first: '$status' },
           justification: { $first: '$justification' },
           severity: { $first: '$severity' },
           probability: { $first: '$probability' },
           riskLevel: { $first: '$riskLevel' },
           recommendation: { $first: '$recommendation' },
+          remediationScore: { $first: '$remediationScore' },
+          remediationComments: { $first: '$remediationComments' },
+          remediationDeadline: { $first: '$remediationDeadline' },
           createdAt: { $first: '$createdAt' },
           updatedAt: { $first: '$updatedAt' }
         }
@@ -40,18 +49,36 @@ exports.getEvaluations = async (req, res) => {
 };
 
 exports.createEvaluation = async (req, res) => {
-  const { controlId, status, justification, severity, probability, recommendation } = req.body;
+  const {
+    companyId = 'default',
+    controlId,
+    status,
+    justification,
+    severity,
+    probability,
+    recommendation,
+    remediationScore,
+    remediationComments,
+    remediationDeadline
+  } = req.body;
 
   let riskLevel = null;
   let finalSeverity = severity;
   let finalProbability = probability;
   let finalRecommendation = recommendation;
 
+  let finalRemediationScore = remediationScore ?? 0;
+  let finalRemediationComments = remediationComments || '';
+  let finalRemediationDeadline = remediationDeadline ? new Date(remediationDeadline) : null;
+
   if (status === 'Conforme') {
     finalSeverity = null;
     finalProbability = null;
     finalRecommendation = null;
     riskLevel = null;
+    finalRemediationScore = 0;
+    finalRemediationComments = '';
+    finalRemediationDeadline = null;
   } else if (finalSeverity && finalProbability) {
     const severityScore = { faible: 1, moyenne: 2, élevée: 3 }[finalSeverity];
     const probabilityScore = { faible: 1, moyenne: 2, élevée: 3 }[finalProbability];
@@ -63,22 +90,26 @@ exports.createEvaluation = async (req, res) => {
 
   try {
     const evaluation = await Evaluation.findOneAndUpdate(
-      { controlId },
+      { controlId, companyId },
       {
         $set: {
+          companyId,
           status,
           justification,
           severity: finalSeverity,
           probability: finalProbability,
           recommendation: finalRecommendation,
-          riskLevel
+          riskLevel,
+          remediationScore: finalRemediationScore,
+          remediationComments: finalRemediationComments,
+          remediationDeadline: finalRemediationDeadline
         }
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
     // Régénère l'état propre : supprimer toutes les évaluations orphelines restantes pour ce contrôle
-    await Evaluation.deleteMany({ controlId, _id: { $ne: evaluation._id } });
+    await Evaluation.deleteMany({ controlId, companyId, _id: { $ne: evaluation._id } });
 
     res.status(201).json(evaluation);
   } catch (error) {

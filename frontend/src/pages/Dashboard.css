@@ -206,6 +206,55 @@
   font-weight: 600;
 }
 
+.company-context-card {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(37, 99, 235, 0.15);
+}
+
+.company-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.company-label {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin: 0 0 0.4rem 0;
+}
+
+.company-context h2 {
+  margin: 0 0 0.35rem 0;
+}
+
+.company-meta {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.company-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  font-weight: 600;
+}
+
+.company-progress strong {
+  font-size: 1.4rem;
+  color: var(--color-blue);
+}
+
+.company-progress small {
+  color: var(--color-text-secondary);
+}
+
 .risk-summary-card {
   border: 1px solid rgba(239, 68, 68, 0.15);
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.02) 0%, rgba(245, 158, 11, 0.02) 100%);

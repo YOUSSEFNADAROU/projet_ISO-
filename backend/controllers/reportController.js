@@ -9,11 +9,15 @@ const axios = require('axios');
 
 exports.getReport = async (req, res) => {
   try {
+    const companyId = req.query.companyId || 'default';
     const scenario = await Scenario.findOne();
     const controls = await Control.find();
     
     // Récupérer les évaluations uniques (dernière par controlId)
     const evaluations = await Evaluation.aggregate([
+      {
+        $match: { companyId }
+      },
       {
         $sort: { updatedAt: -1 } // Trier par date de mise à jour décroissante
       },
@@ -21,6 +25,7 @@ exports.getReport = async (req, res) => {
         $group: {
           _id: '$controlId',
           controlId: { $first: '$controlId' },
+          companyId: { $first: '$companyId' },
           status: { $first: '$status' },
           justification: { $first: '$justification' },
           severity: { $first: '$severity' },

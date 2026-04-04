@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, XCircle, TrendingUp, Award } from 'lucide-react';
 import api from '../services/api';
@@ -13,11 +13,97 @@ import './Dashboard.css';
 const Dashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [evaluations, setEvaluations] = useState([]);
+  const [companyInfo, setCompanyInfo] = useState(null);
+  const [sessionInfo, setSessionInfo] = useState(null);
+
+  const selectedCompanyId = useMemo(() => (
+    localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId')
+  ), []);
 
   useEffect(() => {
-    api.get('/dashboard').then(response => setDashboard(response.data)).catch(err => console.error(err));
-    api.get('/evaluations').then(response => setEvaluations(response.data)).catch(err => console.error(err));
+    const loadData = () => {
+      const companyId = localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId') || 'default';
+      api.get('/dashboard', { params: { companyId } }).then(response => setDashboard(response.data)).catch(err => console.error(err));
+      api.get('/evaluations', { params: { companyId } }).then(response => setEvaluations(response.data)).catch(err => console.error(err));
+    };
+
+    loadData();
+    const intervalId = window.setInterval(loadData, 5000);
+
+    try {
+      const companies = JSON.parse(localStorage.getItem('companies') || '[]');
+      const activeCompany = companies.find((company) => company.id === selectedCompanyId) || null;
+      setCompanyInfo(activeCompany);
+
+      const sessions = JSON.parse(localStorage.getItem('auditSessions') || '[]');
+      const currentAuditId = localStorage.getItem('currentAuditId');
+      const activeSession = currentAuditId
+        ? sessions.find((session) => session.id === currentAuditId)
+        : sessions.find((session) => session.companyId === selectedCompanyId);
+      setSessionInfo(activeSession || null);
+    } catch (storageError) {
+      setCompanyInfo(null);
+      setSessionInfo(null);
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!dashboard || !selectedCompanyId) return;
+
+    try {
+      const sessions = JSON.parse(localStorage.getItem('auditSessions') || '[]');
+      const currentAuditId = localStorage.getItem('currentAuditId');
+      let updated = false;
+
+      const updatedSessions = sessions.map((session) => {
+        const isMatch = currentAuditId ? session.id === currentAuditId : session.companyId === selectedCompanyId;
+        if (!isMatch) return session;
+        updated = true;
+        return {
+          ...session,
+          progress: dashboard.progress,
+          evaluated: dashboard.evaluated,
+          totalControls: dashboard.totalControls,
+          status: dashboard.progress >= 100 ? 'completed' : session.status || 'in_progress',
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      if (!updated) {
+        const newSession = {
+          id: currentAuditId || Date.now().toString(),
+          companyId: selectedCompanyId,
+          companyName: companyInfo?.name || localStorage.getItem('selectedCompanyName') || 'Entreprise',
+          startDate: new Date().toISOString(),
+          status: dashboard.progress >= 100 ? 'completed' : 'in_progress',
+          progress: dashboard.progress,
+          evaluated: dashboard.evaluated,
+          totalControls: dashboard.totalControls,
+          evaluations: [],
+        };
+        updatedSessions.push(newSession);
+        if (!currentAuditId) localStorage.setItem('currentAuditId', newSession.id);
+      }
+
+      localStorage.setItem('auditSessions', JSON.stringify(updatedSessions));
+      const refreshed = updatedSessions.find((session) => session.companyId === selectedCompanyId) || null;
+      setSessionInfo(refreshed);
+    } catch (storageError) {
+      // Ignore persistence errors in demo mode.
+    }
+  }, [dashboard, selectedCompanyId, companyInfo]);
 
   if (!dashboard) return <AppLayout pageTitle="Tableau de Bord"><div className="card">Chargement...</div></AppLayout>;
 
@@ -28,6 +114,22 @@ const Dashboard = () => {
   return (
     <AppLayout pageTitle="Tableau de Bord" pageSubtitle="Vue d'ensemble de votre audit ISO 2700x">
       <div className="dashboard-container">
+        {companyInfo && (
+          <Card className="company-context-card">
+            <div className="company-context">
+              <div>
+                <p className="company-label">Entreprise</p>
+                <h2>{companyInfo.name}</h2>
+                <p className="company-meta">{companyInfo.sector || 'Secteur'} · {companyInfo.size || 'Taille'}</p>
+              </div>
+              <div className="company-progress">
+                <span>Progression</span>
+                <strong>{dashboard.progress}%</strong>
+                <small>{dashboard.evaluated} / {dashboard.totalControls} controles</small>
+              </div>
+            </div>
+          </Card>
+        )}
         {/* Scores Section */}
         <motion.div 
           className="dashboard-scores-section"
@@ -80,31 +182,6 @@ const Dashboard = () => {
           {riskStats.critical > 0 && (
             <StatCard title="Risques Critiques" value={riskStats.critical} icon={AlertCircle} variant="red" />
           )}
-        </motion.div>
-
-        {/* Progress Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <Card>
-            <div className="progress-section">
-              <div className="progress-header">
-                <h3>Progression d'évaluation</h3>
-                <span className="progress-percent">{dashboard.progress}%</span>
-              </div>
-              <div className="progress-bar">
-                <motion.div 
-                  className="progress-fill" 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${dashboard.progress}%` }}
-                  transition={{ duration: 1, delay: 0.4 }}
-                />
-              </div>
-              <p className="progress-text">{dashboard.evaluated} / {dashboard.totalControls} contrôles évalués</p>
-            </div>
-          </Card>
         </motion.div>
 
         {/* Results Distribution */}
@@ -162,29 +239,6 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* Summary */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
-        >
-          <Card className="dashboard-summary">
-            <h3>Résumé</h3>
-            <div className="summary-content">
-              <p>
-                Vous avez évalué <strong>{dashboard.evaluated}</strong> contrôles sur <strong>{dashboard.totalControls}</strong> disponibles.
-              </p>
-              <p>
-                Votre score de conformité actuel est de <strong>{score}%</strong> avec un score pondéré de <strong>{weightedScore}/100</strong>.
-              </p>
-              {riskStats.total > 0 && (
-                <p>
-                  <strong>{riskStats.total}</strong> contrôles nécessitent des actions correctives.
-                </p>
-              )}
-            </div>
-          </Card>
-        </motion.div>
       </div>
     </AppLayout>
   );

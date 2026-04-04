@@ -12,6 +12,9 @@ const EvaluationForm = ({
   initialSeverity = '', 
   initialProbability = '', 
   initialRecommendation = '', 
+  initialRemediationScore = 0,
+  initialRemediationComments = '',
+  initialRemediationDeadline = '',
   onSaveSuccess 
 }) => {
   const [status, setStatus] = useState(initialStatus);
@@ -19,9 +22,69 @@ const EvaluationForm = ({
   const [severity, setSeverity] = useState(initialSeverity);
   const [probability, setProbability] = useState(initialProbability);
   const [recommendation, setRecommendation] = useState(initialRecommendation);
+  const [remediationScore, setRemediationScore] = useState(initialRemediationScore);
+  const [remediationComments, setRemediationComments] = useState(initialRemediationComments);
+  const [remediationDeadline, setRemediationDeadline] = useState(initialRemediationDeadline);
   const [showRisk, setShowRisk] = useState(status !== 'Conforme' && status !== '');
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState(null);
+
+  const normalizeDateValue = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value.slice(0, 10);
+    try {
+      return new Date(value).toISOString().slice(0, 10);
+    } catch (error) {
+      return '';
+    }
+  };
+
+  const syncAuditProgress = async () => {
+    const selectedCompanyId = localStorage.getItem('selectedCompanyId');
+    if (!selectedCompanyId) return;
+
+    try {
+      const response = await api.get('/dashboard', { params: { companyId: selectedCompanyId } });
+      const nextDashboard = response.data;
+      const currentAuditId = localStorage.getItem('currentAuditId');
+      const sessions = JSON.parse(localStorage.getItem('auditSessions') || '[]');
+      let updated = false;
+
+      const updatedSessions = sessions.map((session) => {
+        const isMatch = currentAuditId ? session.id === currentAuditId : session.companyId === selectedCompanyId;
+        if (!isMatch) return session;
+        updated = true;
+        return {
+          ...session,
+          progress: nextDashboard.progress,
+          evaluated: nextDashboard.evaluated,
+          totalControls: nextDashboard.totalControls,
+          status: nextDashboard.progress >= 100 ? 'completed' : session.status || 'in_progress',
+          updatedAt: new Date().toISOString(),
+        };
+      });
+
+      if (!updated) {
+        const newSession = {
+          id: currentAuditId || Date.now().toString(),
+          companyId: selectedCompanyId,
+          companyName: localStorage.getItem('selectedCompanyName') || 'Entreprise',
+          startDate: new Date().toISOString(),
+          status: nextDashboard.progress >= 100 ? 'completed' : 'in_progress',
+          progress: nextDashboard.progress,
+          evaluated: nextDashboard.evaluated,
+          totalControls: nextDashboard.totalControls,
+          evaluations: [],
+        };
+        updatedSessions.push(newSession);
+        if (!currentAuditId) localStorage.setItem('currentAuditId', newSession.id);
+      }
+
+      localStorage.setItem('auditSessions', JSON.stringify(updatedSessions));
+    } catch (error) {
+      // Ignore sync errors in demo mode.
+    }
+  };
 
   useEffect(() => {
     setStatus(initialStatus);
@@ -29,8 +92,20 @@ const EvaluationForm = ({
     setSeverity(initialSeverity);
     setProbability(initialProbability);
     setRecommendation(initialRecommendation);
+    setRemediationScore(initialRemediationScore || 0);
+    setRemediationComments(initialRemediationComments || '');
+    setRemediationDeadline(normalizeDateValue(initialRemediationDeadline));
     setShowRisk(initialStatus !== 'Conforme' && initialStatus !== '');
-  }, [initialStatus, initialJustification, initialSeverity, initialProbability, initialRecommendation]);
+  }, [
+    initialStatus,
+    initialJustification,
+    initialSeverity,
+    initialProbability,
+    initialRecommendation,
+    initialRemediationScore,
+    initialRemediationComments,
+    initialRemediationDeadline
+  ]);
 
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
@@ -41,16 +116,21 @@ const EvaluationForm = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const data = { controlId, status, justification };
+    const companyId = localStorage.getItem('selectedCompanyId') || localStorage.getItem('companyId') || 'default';
+    const data = { companyId, controlId, status, justification };
     if (status !== 'Conforme') {
       data.severity = severity;
       data.probability = probability;
       data.recommendation = recommendation;
+      data.remediationScore = remediationScore;
+      data.remediationComments = remediationComments;
+      data.remediationDeadline = remediationDeadline;
     }
     try {
       await api.post('/evaluations', data);
       setToast({ message: 'Évaluation sauvegardée avec succès ✓', type: 'success' });
       if (onSaveSuccess) onSaveSuccess();
+      await syncAuditProgress();
     } catch (error) {
       setToast({ message: 'Erreur : ' + error.message, type: 'error' });
     } finally {
@@ -211,6 +291,60 @@ const EvaluationForm = ({
                     rows={4}
                     required={showRisk}
                   />
+                </div>
+
+                <div className="form-group full-width">
+                  <div className="form-header">
+                    <label className="form-label">Scoring de remédiation</label>
+                    <span className="form-required">*</span>
+                  </div>
+                  <div className="remediation-slider-wrap">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={remediationScore}
+                      onChange={(e) => setRemediationScore(Number(e.target.value))}
+                      className="remediation-slider"
+                    />
+                    <div className="remediation-score">
+                      <span className="remediation-score-value">{remediationScore}%</span>
+                      <span className={`remediation-score-label ${remediationScore < 30 ? 'low' : remediationScore < 70 ? 'medium' : 'high'}`}>
+                        {remediationScore < 30 ? 'Faible' : remediationScore < 70 ? 'En cours' : 'Avancé'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-grid-2">
+                  <div className="form-group">
+                    <div className="form-header">
+                      <label className="form-label">Commentaires de remédiation</label>
+                      <span className="form-required">*</span>
+                    </div>
+                    <textarea
+                      value={remediationComments}
+                      onChange={(e) => setRemediationComments(e.target.value)}
+                      placeholder="Décrivez les actions de remédiation..."
+                      className="form-textarea remediation-textarea"
+                      rows={3}
+                      required={showRisk}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <div className="form-header">
+                      <label className="form-label">Date limite de remédiation</label>
+                      <span className="form-required">*</span>
+                    </div>
+                    <input
+                      type="date"
+                      value={remediationDeadline}
+                      onChange={(e) => setRemediationDeadline(e.target.value)}
+                      className="form-input"
+                      required={showRisk}
+                    />
+                  </div>
                 </div>
               </motion.div>
             )}

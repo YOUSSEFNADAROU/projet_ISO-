@@ -12,9 +12,9 @@ const { searchControls, getControlByCode, getControlsByCategory } = require('./c
 const OPENAI_CONFIG = {
   apiKey: process.env.OPENAI_API_KEY,
   baseUrl: 'https://api.openai.com/v1',
-  model: 'gpt-4-turbo',
-  fallbackModel: 'gpt-3.5-turbo',
-  timeout: 30000
+  model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+  fallbackModel: process.env.OPENAI_FALLBACK_MODEL || process.env.OPENAI_MODEL || 'gpt-4o-mini',
+  timeout: Number(process.env.OPENAI_TIMEOUT) || 30000
 };
 
 /**

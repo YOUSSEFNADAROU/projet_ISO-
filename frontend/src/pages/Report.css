@@ -12,12 +12,12 @@
   align-items: center;
 }
 
-.button-group-1,
-.button-group-2 {
+.report-header-main {
   display: flex;
   gap: var(--spacing-md);
   flex-wrap: wrap;
   align-items: center;
+  width: 100%;
 }
 
 .btn-download {
@@ -46,32 +46,27 @@
   cursor: not-allowed;
 }
 
-.btn-upload {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
+.report-chatbot-note {
+  flex: 1;
+  min-width: 280px;
   padding: var(--spacing-md) var(--spacing-lg);
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
+  border: 1px solid rgba(37, 99, 235, 0.15);
   border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(6, 182, 212, 0.04) 100%);
+}
+
+.report-chatbot-note h3 {
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--color-navy);
+  font-size: 16px;
+}
+
+.report-chatbot-note p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
   font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
-
-.btn-upload:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-}
-
-.btn-upload:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 
 .error-alert {
   display: flex;
@@ -366,6 +361,10 @@
   .btn-download {
     width: 100%;
     justify-content: center;
+  }
+
+  .report-chatbot-note {
+    width: 100%;
   }
 
   .error-alert {

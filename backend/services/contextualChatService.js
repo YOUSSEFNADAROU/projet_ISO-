@@ -6,12 +6,13 @@
 const Control = require('../models/Control');
 const Evaluation = require('../models/Evaluation');
 const Scenario = require('../models/Scenario');
-const axios = require('axios');
 
 /**
  * Analyser question et chercher les contrôles/données correspondantes
  */
 async function analyzeAndFetchData(question, context = {}) {
+  const normalizedQuestion = typeof question === 'string' ? question.trim() : '';
+
   // Patterns de reconnaissance
   const patterns = {
     controlCode: /A\.\d+(\.\d+){2,}/gi, // A.9.1.1
@@ -25,14 +26,10 @@ async function analyzeAndFetchData(question, context = {}) {
   };
 
   // Chercher codes de contrôles mentionnés
-  const controlMatches = [...question.matchAll(patterns.controlCode)];
+  const controlMatches = [...normalizedQuestion.matchAll(patterns.controlCode)];
   let controlCodes = controlMatches.map(m => m[0].toUpperCase());
-
-  // Chercher tous les contrôles si demande générale
-  let allControls = null;
-  if (!controlCodes.length && question.toLowerCase().includes('tous')) {
-    allControls = await Control.find();
-  }
+  const analysisType = detectQuestionType(normalizedQuestion);
+  const wantsAllControls = !controlCodes.length && normalizedQuestion.toLowerCase().includes('tous');
 
   // Chercher données réelles
   let controls = [];
@@ -52,16 +49,46 @@ async function analyzeAndFetchData(question, context = {}) {
       .sort({ updatedAt: -1 })
       .lean();
     }
+  } else if (wantsAllControls || ['statistics', 'risk'].includes(analysisType)) {
+    controls = await Control.find().lean();
+    evaluations = await Evaluation.find()
+      .sort({ updatedAt: -1 })
+      .lean();
+  } else {
+    const keywords = normalizedQuestion
+      .toLowerCase()
+      .split(/\s+/)
+      .map((word) => word.replace(/[^\w.]/g, ''))
+      .filter((word) => word.length >= 4);
+
+    if (keywords.length > 0) {
+      const searchRegex = new RegExp(keywords.slice(0, 4).join('|'), 'i');
+      controls = await Control.find({
+        $or: [
+          { title: searchRegex },
+          { description: searchRegex },
+          { objective: searchRegex },
+          { category: searchRegex }
+        ]
+      })
+      .limit(5)
+      .lean();
+
+      if (controls.length > 0) {
+        evaluations = await Evaluation.find({
+          controlId: { $in: controls.map(c => c._id) }
+        })
+        .sort({ updatedAt: -1 })
+        .lean();
+      }
+    }
   }
 
   // Chercher scénario
   const scenario = await Scenario.findOne().lean();
 
-  // Détecter type de question
-  const analysisType = detectQuestionType(question);
-
   return {
-    question,
+    question: normalizedQuestion,
     controlCodes,
     controls,
     evaluations,

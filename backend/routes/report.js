@@ -8,6 +8,7 @@ router.post('/chat', reportController.chatAboutAnalysis);
 router.post('/chat-advanced', reportController.chatAdvanced);
 router.post('/chat-with-controls', reportController.chatWithControls);
 router.post('/chat-contextual', reportController.chatContextual); // 🆕 Contextual & Real Data
+router.post('/chat-expert', reportController.chatExpert);
 router.get('/control/:code', reportController.getControlInfo);
 router.post('/action-plan', reportController.generateActionPlan);
 

@@ -4,7 +4,7 @@ const Evaluation = require('../models/Evaluation');
 const AuditHistory = require('../models/AuditHistory');
 const aiExpertService = require('../services/aiExpertService');
 const aiExpertServiceV2 = require('../services/aiExpertServiceV2');
-const contextualChatService = require('../services/contextualChatService');
+const isoAuditAgentService = require('../services/isoAuditAgentService');
 const axios = require('axios');
 
 exports.getReport = async (req, res) => {
@@ -636,39 +636,29 @@ exports.getControlInfo = async (req, res) => {
  */
 exports.chatContextual = async (req, res) => {
   try {
-    const { question, context } = req.body;
+    const { question, context, conversationHistory } = req.body;
     
-    if (!question) {
+    if (!question || typeof question !== 'string' || !question.trim()) {
       return res.status(400).json({ message: 'Question requise.' });
     }
 
-    // 1. Analyser question et récupérer données réelles
-    const analysisData = await contextualChatService.analyzeAndFetchData(question, context);
+    const result = await isoAuditAgentService.generateChatResponse(question, {
+      context,
+      conversationHistory,
+    });
 
-    // 2. Construire réponse structurée avec données réelles
-    const response = await contextualChatService.buildStructuredResponse(analysisData);
-
-    // 3. Formater pour affichage
-    const formattedResponse = contextualChatService.formatResponseForDisplay(response);
-
-    // 4. Retourner réponse structurée
     res.json({
-      success: true,
-      response: formattedResponse,
-      data: {
-        hasRealData: analysisData.hasRealData,
-        questionType: analysisData.analysisType,
-        controlsFound: analysisData.controls.length,
-        evaluationsFound: analysisData.evaluations.length,
-      },
-      timestamp: new Date().toISOString()
+      ...result,
+      timestamp: new Date().toISOString(),
     });
 
   } catch (error) {
     console.error('Erreur chat contextual:', error);
-    res.status(500).json({ 
+    res.status(error.statusCode || 500).json({ 
       success: false,
       message: error.message 
     });
   }
 };
+
+exports.chatExpert = exports.chatContextual;

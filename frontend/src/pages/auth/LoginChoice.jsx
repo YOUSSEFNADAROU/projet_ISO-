@@ -14,6 +14,7 @@ import {
   Sparkles,
   UserCog,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import './LoginChoice.css';
 
 const DEMO_COMPANY = {
@@ -51,6 +52,7 @@ const getRegisteredCompanies = () => {
 
 const LoginChoice = ({ initialRole = null }) => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [selectedRole, setSelectedRole] = useState(initialRole);
   const [companyMode, setCompanyMode] = useState('email');
@@ -66,23 +68,35 @@ const LoginChoice = ({ initialRole = null }) => {
 
   const resetError = () => setError('');
 
-  const loginCompany = (company) => {
+  const loginCompany = async (company) => {
+    await login({
+      email: company.contactEmail,
+      password: company.password || 'company123',
+      name: company.name,
+      role: 'company',
+    });
     localStorage.setItem('companyId', company.id);
     localStorage.setItem('companyName', company.name);
     localStorage.setItem('userRole', 'company');
     localStorage.removeItem('auditorId');
-    navigate('/company/dashboard');
+    navigate('/home');
   };
 
-  const loginAuditor = () => {
+  const loginAuditor = async () => {
+    await login({
+      email: DEMO_AUDITOR.email,
+      password: DEMO_AUDITOR.password,
+      name: DEMO_AUDITOR.name,
+      role: 'auditor',
+    });
     localStorage.setItem('auditorId', DEMO_AUDITOR.id);
     localStorage.setItem('userRole', 'auditor');
     localStorage.removeItem('companyId');
     localStorage.removeItem('companyName');
-    navigate('/auditor/companies');
+    navigate('/home');
   };
 
-  const handleCompanySubmit = (event) => {
+  const handleCompanySubmit = async (event) => {
     event.preventDefault();
     resetError();
 
@@ -95,12 +109,12 @@ const LoginChoice = ({ initialRole = null }) => {
       );
 
       if (email === DEMO_COMPANY.contactEmail && password === DEMO_COMPANY.password) {
-        loginCompany(DEMO_COMPANY);
+        await loginCompany(DEMO_COMPANY);
         return;
       }
 
       if (foundCompany) {
-        loginCompany(foundCompany);
+        await loginCompany(foundCompany);
         return;
       }
 
@@ -116,10 +130,10 @@ const LoginChoice = ({ initialRole = null }) => {
       return;
     }
 
-    loginCompany(companyByCode);
+    await loginCompany(companyByCode);
   };
 
-  const handleAuditorSubmit = (event) => {
+  const handleAuditorSubmit = async (event) => {
     event.preventDefault();
     resetError();
 
@@ -128,7 +142,7 @@ const LoginChoice = ({ initialRole = null }) => {
       return;
     }
 
-    loginAuditor();
+    await loginAuditor();
   };
 
   return (

@@ -23,16 +23,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   }, [user]);
 
-  const login = async ({ email, password, remember = true }) => {
+  const login = async ({ email, password, remember = true, name, role }) => {
     if (!email || !password) {
       throw new Error('Veuillez renseigner l\'email et le mot de passe.');
     }
 
     const nextUser = {
       id: 'demo-user',
-      name: email.split('@')[0] || 'Utilisateur',
+      name: name || email.split('@')[0] || 'Utilisateur',
       email,
-      role: 'Auditeur',
+      role: role || 'Auditeur',
       remember,
     };
 

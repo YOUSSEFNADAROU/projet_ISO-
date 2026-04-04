@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckSquare, BarChart3, FileCheck, ArrowRight } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import AppLayout from '../components/AppLayout';
 import PageHeader from '../components/PageHeader';
 import Card from '../components/Card';
@@ -11,6 +12,7 @@ import './Home.css';
 
 const Home = () => {
   const [dashboard, setDashboard] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     api.get('/dashboard').then(response => setDashboard(response.data));
@@ -20,7 +22,7 @@ const Home = () => {
     { path: '/controls', label: 'Contrôles', icon: CheckSquare, color: 'cyan' },
     { path: '/dashboard', label: 'Tableau de Bord', icon: BarChart3, color: 'orange' },
     { path: '/report', label: 'Rapport', icon: FileCheck, color: 'green' },
-  ];
+  ].filter((link) => user?.role !== 'company' || link.path !== '/controls');
 
   return (
     <AppLayout pageTitle="Accueil" pageSubtitle="Bienvenue dans ISO Audit Simulator">

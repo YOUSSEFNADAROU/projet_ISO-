@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Building2, FileText, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Building2, ShieldCheck } from 'lucide-react';
 import './CompanyDashboard.css';
 
 const CompanyDashboard = () => {
@@ -14,7 +14,7 @@ const CompanyDashboard = () => {
       localStorage.setItem('selectedCompanyId', companyId);
       localStorage.setItem('selectedCompanyName', companyName);
     }
-    navigate('/dashboard');
+    navigate('/home');
   };
 
   return (
@@ -27,9 +27,6 @@ const CompanyDashboard = () => {
         <div className="company-dashboard-actions">
           <button type="button" onClick={startOrResume}>
             <ShieldCheck size={18} /> Ouvrir le tableau de bord <ArrowRight size={18} />
-          </button>
-          <button type="button" className="secondary" onClick={() => navigate('/controls')}>
-            <FileText size={18} /> Voir les controles
           </button>
         </div>
       </div>

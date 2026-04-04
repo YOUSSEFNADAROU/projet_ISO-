@@ -38,7 +38,7 @@ const Topbar = ({ pageTitle, pageSubtitle, onMenuClick }) => {
           className="topbar-logout"
           onClick={() => {
             logout();
-            navigate('/login', { replace: true });
+            navigate('/', { replace: true });
           }}
         >
           <LogOut size={18} />

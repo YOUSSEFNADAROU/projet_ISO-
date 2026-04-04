@@ -2,14 +2,16 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, CheckSquare, BarChart3, FileCheck, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = ({ open, persistent, onClose }) => {
   const location = useLocation();
+  const { user } = useAuth();
 
   const menuItems = [
     { path: '/home', label: 'Accueil', icon: Home },
-    { path: '/controls', label: 'Contrôles', icon: CheckSquare },
+    ...(user?.role === 'company' ? [] : [{ path: '/controls', label: 'Contrôles', icon: CheckSquare }]),
     { path: '/dashboard', label: 'Tableau de Bord', icon: BarChart3 },
     { path: '/report', label: 'Rapport', icon: FileCheck },
   ];

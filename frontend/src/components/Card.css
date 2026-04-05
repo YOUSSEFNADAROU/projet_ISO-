@@ -3,11 +3,29 @@
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-light);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Décoration de bordure supérieure */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-info) 50%, var(--color-primary) 100%);
+  opacity: 0.6;
 }
 
 .card-hover:hover {
   box-shadow: var(--shadow-lg);
+  transform: translateY(-6px);
+  border-color: var(--color-primary-light);
+  background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-info-light) 100%);
 }
 
 .card h1, .card h2, .card h3, .card h4, .card h5, .card h6 {

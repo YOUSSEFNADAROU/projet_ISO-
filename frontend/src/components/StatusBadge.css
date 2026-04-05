@@ -2,12 +2,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  border-radius: var(--radius-lg);
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: capitalize;
   white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
 .badge-sm {
@@ -16,18 +17,21 @@
 }
 
 .status-conforme {
-  background-color: rgba(22, 163, 74, 0.1);
-  color: var(--color-green);
+  background: linear-gradient(135deg, var(--color-success-light) 0%, rgba(16, 185, 129, 0.08) 100%);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .status-partiellement {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: var(--color-orange);
+  background: linear-gradient(135deg, var(--color-warning-light) 0%, rgba(245, 158, 11, 0.08) 100%);
+  color: #92400e;
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
 .status-non-conforme {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: var(--color-red);
+  background: linear-gradient(135deg, var(--color-error-light) 0%, rgba(239, 68, 68, 0.08) 100%);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .status-conforme svg,

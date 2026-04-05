@@ -56,6 +56,7 @@ exports.getReport = async (req, res) => {
       scenario,
       controls,
       evaluations,
+      auditTeam: scenario?.auditTeam || [],
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

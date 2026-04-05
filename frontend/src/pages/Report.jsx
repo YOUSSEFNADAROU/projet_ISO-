@@ -212,7 +212,8 @@ const Report = () => {
         'Imane Id Moullay',
         'Hanane Essahely',
         'Khaoula Maraghir',
-        'Hajar Laqlib'
+        'Hajar Laqlib',
+        'walid larhrabli'
       ];
 
       let nextAiAnalysis = aiAnalysis;

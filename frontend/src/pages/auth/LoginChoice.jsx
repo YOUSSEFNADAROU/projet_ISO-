@@ -16,6 +16,7 @@ import {
   UserCog,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import logo from '../../assets/logo.png';
 import './LoginChoice.css';
 
 const DEMO_COMPANY = {
@@ -205,7 +206,7 @@ const LoginChoice = ({ initialRole = null }) => {
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ repeat: Infinity, duration: 2.4 }}
           >
-            <Shield size={30} />
+            <img src={logo} alt="LearnAudit Logo" className="login-choice-logo-image" />
           </motion.div>
           <div>
             <h1>LearnAudit</h1>

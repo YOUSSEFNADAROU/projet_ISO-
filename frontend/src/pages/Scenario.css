@@ -15,22 +15,40 @@
   align-items: center;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-info) 100%);
+  border-radius: var(--radius-md);
+  color: white;
 }
 
 .scenario-card-header h3 {
   margin: 0;
   font-size: 1rem;
+  color: white;
 }
 
 .scenario-value {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: white;
 }
 
 .scenario-section h2 {
   margin: 0 0 var(--spacing-lg) 0;
+  position: relative;
+  padding-bottom: var(--spacing-md);
+}
+
+.scenario-section h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-info) 100%);
+  border-radius: 2px;
 }
 
 .scenario-list {
@@ -43,16 +61,22 @@
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-md);
-  padding: var(--spacing-md) 0;
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--spacing-md);
+  background: rgba(37, 99, 235, 0.03);
+  border-left: 3px solid var(--color-info);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-sm);
+  transition: all 0.2s ease;
 }
 
-.scenario-list-item:last-child {
-  border-bottom: none;
+.scenario-list-item:hover {
+  background: rgba(37, 99, 235, 0.08);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+  transform: translateX(4px);
 }
 
 .scenario-list-bullet {
-  color: var(--color-blue);
+  color: var(--color-info);
   font-weight: bold;
   font-size: 1.5rem;
   line-height: 1;

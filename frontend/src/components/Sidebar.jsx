@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, CheckSquare, BarChart3, FileCheck, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../assets/logo.png';
 import './Sidebar.css';
 
 const Sidebar = ({ open, persistent, onClose }) => {
@@ -42,10 +43,10 @@ const Sidebar = ({ open, persistent, onClose }) => {
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <div className="sidebar-logo">
-              <span className="logo-icon">🔐</span>
+              <img src={logo} alt="ISO Audit Logo" className="logo-image" />
             </div>
             <div>
-              <h1>ISO Audit</h1>
+              <h1>Learn Audit</h1>
               <p>Simulator</p>
             </div>
           </div>

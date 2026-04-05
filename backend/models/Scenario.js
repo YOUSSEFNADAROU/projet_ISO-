@@ -7,6 +7,7 @@ const scenarioSchema = new mongoose.Schema({
   keySystems: [{ type: String }],
   securityContext: { type: String, required: true },
   auditObjective: { type: String, required: true },
+  auditTeam: [{ type: String }],
 });
 
 module.exports = mongoose.model('Scenario', scenarioSchema);

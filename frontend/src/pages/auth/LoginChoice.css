@@ -50,30 +50,42 @@
 .login-choice-logo-wrap {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-direction: column;
   gap: 0.8rem;
   margin-bottom: 0.9rem;
 }
 
 .login-choice-logo {
-  width: 38px;
-  height: 38px;
+  width: 50px;
+  height: 50px;
   border-radius: 9px;
   display: grid;
   place-items: center;
   color: #fff;
-  background: linear-gradient(135deg, var(--color-blue), var(--color-cyan));
-  box-shadow: var(--shadow-sm);
+  background: white;
+  box-shadow: var(--shadow-md);
+  padding: 4px;
+}
+
+.login-choice-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
 }
 
 .login-choice-logo-wrap h1 {
   font-size: 1.15rem;
   margin: 0;
   color: var(--color-text-primary);
+  text-align: center;
 }
 
 .login-choice-logo-wrap p {
   margin: 0;
   color: var(--color-text-secondary);
+  text-align: center;
 }
 
 .login-choice-pills {
@@ -81,6 +93,7 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.6rem 0 1rem;
+  justify-content: center;
 }
 
 .login-choice-pill {

@@ -13,6 +13,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
+import logo from '../../assets/logo.png';
 import './CompanySelector.css';
 
 const getCompanies = () => {
@@ -83,7 +84,9 @@ const CompanySelector = () => {
     <div className="company-selector-page">
       <header className="company-selector-header">
         <div className="brand-wrap">
-          <div className="brand-logo"><Building2 size={22} /></div>
+          <div className="brand-logo">
+            <img src={logo} alt="LearnAudit Logo" className="brand-logo-image" />
+          </div>
           <h1>LearnAudit</h1>
           <span>Auditeur</span>
         </div>
